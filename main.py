@@ -1,7 +1,14 @@
 from fastapi import FastAPI
 import uvicorn
+from src.core.init_db import init_db
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
+
+app = FastAPI(title="SCF API", version="1.0.0", lifespan=lifespan)
 
 @app.get("/")
 def health():
