@@ -2,6 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.session import get_session
+from src.core.middlewares.role_middleware import get_current_user
+from src.core.middlewares.role_middleware import require_role
+from src.domain.models.User import User, UserRole
 from src.infrastructure.repositories.EventPhotoRepository import EventPhotoRepository
 from src.infrastructure.repositories.EventRepository import EventRepository
 from src.application.usecases.CreateEventPhotoUseCase import CreateEventPhotoUseCase
@@ -15,7 +18,10 @@ router = APIRouter(prefix="/event-photos", tags=["event-photos"])
 
 @router.post("", response_model=EventPhotoResponse, status_code=201)
 async def create_event_photo(
-    schema: EventPhotoCreateSchema, session: AsyncSession = Depends(get_session)
+    schema: EventPhotoCreateSchema,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO)),
 ):
     photo_repository = EventPhotoRepository(session)
     event_repository = EventRepository(session)
@@ -31,7 +37,12 @@ async def create_event_photo(
 
 
 @router.get("/event/{event_id}", response_model=list[EventPhotoResponse])
-async def list_event_photos(event_id: int, session: AsyncSession = Depends(get_session)):
+async def list_event_photos(
+    event_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO)),
+):
     repository = EventPhotoRepository(session)
     use_case = ListEventPhotosUseCase(repository)
 

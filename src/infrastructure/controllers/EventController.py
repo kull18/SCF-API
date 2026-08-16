@@ -2,6 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.session import get_session
+from src.core.middlewares.role_middleware import get_current_user
+from src.core.middlewares.role_middleware import require_role
+from src.domain.models.User import User, UserRole
 from src.infrastructure.repositories.EventRepository import EventRepository
 from src.application.usecases.CreateEventUseCase import CreateEventUseCase
 from src.application.usecases.ListEventsUseCase import ListEventsUseCase
@@ -13,16 +16,18 @@ from src.application.mappers.event_mapper import EventMapper
 
 router = APIRouter(prefix="/events", tags=["events"])
 
-# TODO: reemplazar por el usuario autenticado real cuando el login esté listo
-FAKE_CURRENT_USER_ID = 1
-
 
 @router.post("", response_model=EventResponse, status_code=201)
-async def create_event(schema: EventCreateSchema, session: AsyncSession = Depends(get_session)):
+async def create_event(
+    schema: EventCreateSchema,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO)),
+):
     repository = EventRepository(session)
     use_case = CreateEventUseCase(repository)
 
-    model = EventMapper.schema_to_model(schema, reported_by_id=FAKE_CURRENT_USER_ID)
+    model = EventMapper.schema_to_model(schema, reported_by_id=current_user.id)
     created = await use_case.execute(model)
 
     return EventMapper.model_to_response(created)
@@ -32,6 +37,8 @@ async def create_event(schema: EventCreateSchema, session: AsyncSession = Depend
 async def list_events(
     status: EventStatus | None = Query(default=None),
     session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO)),
 ):
     repository = EventRepository(session)
     use_case = ListEventsUseCase(repository)
@@ -42,7 +49,11 @@ async def list_events(
 
 @router.patch("/{event_id}", response_model=EventResponse)
 async def update_event(
-    event_id: int, schema: EventUpdateSchema, session: AsyncSession = Depends(get_session)
+    event_id: int,
+    schema: EventUpdateSchema,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO)),
 ):
     repository = EventRepository(session)
     use_case = UpdateEventUseCase(repository)

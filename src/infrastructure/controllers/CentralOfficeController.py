@@ -2,6 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.session import get_session
+from src.core.middlewares.role_middleware import get_current_user
+from src.core.middlewares.role_middleware import require_role
+from src.domain.models.User import User, UserRole
 from src.infrastructure.repositories.CentralOfficeRepository import CentralOfficeRepository
 from src.application.usecases.CreateCentralOfficeUseCase import (
     CreateCentralOfficeUseCase,
@@ -30,7 +33,10 @@ router = APIRouter(prefix="/central-offices", tags=["central-offices"])
 
 @router.post("", response_model=CentralOfficeResponse, status_code=201)
 async def create_central_office(
-    schema: CentralOfficeCreateSchema, session: AsyncSession = Depends(get_session)
+    schema: CentralOfficeCreateSchema,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO)),
 ):
     repository = CentralOfficeRepository(session)
     use_case = CreateCentralOfficeUseCase(repository)
@@ -45,7 +51,11 @@ async def create_central_office(
 
 
 @router.get("", response_model=list[CentralOfficeResponse])
-async def list_central_offices(session: AsyncSession = Depends(get_session)):
+async def list_central_offices(
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO)),
+):
     repository = CentralOfficeRepository(session)
     use_case = ListCentralOfficesUseCase(repository)
 
@@ -54,7 +64,12 @@ async def list_central_offices(session: AsyncSession = Depends(get_session)):
 
 
 @router.get("/{office_id}", response_model=CentralOfficeResponse)
-async def get_central_office(office_id: int, session: AsyncSession = Depends(get_session)):
+async def get_central_office(
+    office_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO)),
+):
     repository = CentralOfficeRepository(session)
     use_case = GetCentralOfficeUseCase(repository)
 
@@ -71,6 +86,8 @@ async def update_central_office(
     office_id: int,
     schema: CentralOfficeUpdateSchema,
     session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO)),
 ):
     repository = CentralOfficeRepository(session)
     use_case = UpdateCentralOfficeUseCase(repository)
@@ -84,7 +101,12 @@ async def update_central_office(
 
 
 @router.delete("/{office_id}", status_code=204)
-async def delete_central_office(office_id: int, session: AsyncSession = Depends(get_session)):
+async def delete_central_office(
+    office_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO)),
+):
     repository = CentralOfficeRepository(session)
     use_case = DeleteCentralOfficeUseCase(repository)
 

@@ -9,6 +9,7 @@ from src.infrastructure.controllers import (
     EventPhotoController,
 )
 from contextlib import asynccontextmanager
+from src.core.middlewares.auth_middleware import AuthMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -16,6 +17,8 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(title="SCF API", version="1.0.0", lifespan=lifespan)
+
+app.add_middleware(AuthMiddleware)
 
 app.include_router(AuthController.router)
 app.include_router(CentralOfficeController.router)
