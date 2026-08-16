@@ -1,14 +1,8 @@
-from datetime import datetime
-
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 
-class EventPhotoRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
+class EventPhotoCreateSchema(BaseModel):
     event_id: int
     url: str
-    label: str | None
-    size_bytes: int | None
-    uploaded_at: datetime
+    label: str | None = None
+    size_bytes: int | None = None

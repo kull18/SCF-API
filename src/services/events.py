@@ -2,10 +2,10 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.central_office import CentralOffice
-from app.models.event import Event
-from app.services.geo import point_from_coords, coords_from_point
-from app.schemas.event import EventCreate
+from src.domain.models.CentralOffice import CentralOffice
+from src.domain.models.Event import Event
+from src.services.geo import point_from_coords, coords_from_point
+from src.domain.schemas.Event import EventCreate
 
 
 async def calculate_distance_km(

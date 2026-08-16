@@ -1,39 +1,15 @@
-from datetime import datetime
-from enum import Enum
+from pydantic import BaseModel, Field, model_validator
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
-
-from src.domain.schemas.EventPhoto import EventPhotoRead
+from src.domain.models.Event import LocationMethod
 
 
-class EventType(str, Enum):
-    FIBER_CUT = "FIBER_CUT"
-
-
-class LocationMethod(str, Enum):
-    GPS = "GPS"
-    MAP = "MAP"
-
-
-class EventStatus(str, Enum):
-    ACTIVE = "ACTIVE"
-    PENDING = "PENDING"
-    RESOLVED = "RESOLVED"
-
-
-class EventCreate(BaseModel):
-    """Payload sent from the mobile app when reporting a fiber cut (section 14)."""
-
+class EventCreateSchema(BaseModel):
     origin_office_id: int
     destination_office_id: int
-
     latitude: float
     longitude: float
     location_method: LocationMethod
-    accuracy: float | None = Field(
-        default=None, description="Meters. Required if location_method is GPS."
-    )
-
+    accuracy: float | None = Field(default=None, description="Meters, required if GPS")
     field_reference: str | None = None
     description: str
 
@@ -52,45 +28,7 @@ class EventCreate(BaseModel):
         return self
 
 
-class EventUpdate(BaseModel):
-    status: EventStatus | None = None
+class EventUpdateSchema(BaseModel):
+    status: str | None = None
     description: str | None = None
     field_reference: str | None = None
-
-
-class CentralOfficeSummary(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    prefix: str
-    name: str
-
-
-class EventRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    type: EventType
-
-    origin_office: CentralOfficeSummary
-    destination_office: CentralOfficeSummary
-
-    latitude: float
-    longitude: float
-    location_method: LocationMethod
-    accuracy: float | None
-
-    distance_to_origin: float
-    distance_to_destination: float
-
-    field_reference: str | None
-    description: str
-    status: EventStatus
-
-    reported_by_id: int
-    reported_at: datetime
-
-    photos: list[EventPhotoRead] = []
-
-    created_at: datetime
-    updated_at: datetime
