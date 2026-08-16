@@ -1,6 +1,6 @@
 from src.domain.schemas.User import UserCreateSchema
 from src.application.dtos.responses.user_response import UserResponse
-from src.domain.models.User import User
+from src.domain.models.User import User, UserRole
 from src.services.password_service import hash_password
 
 
@@ -11,7 +11,7 @@ class UserMapper:
             full_name=schema.full_name,
             phone=schema.phone,
             email=schema.email,
-            role=schema.role,
+            role=UserRole.TECNICO,
             password_hash=hash_password(schema.password),
         )
 

@@ -25,5 +25,5 @@ class LoginUseCase:
         if not user.is_active:
             raise InactiveUserError("This user account is inactive")
 
-        token = create_access_token(subject=user.technician_code)
+        token = create_access_token(subject=user.technician_code, role=user.role.value)
         return user, token
