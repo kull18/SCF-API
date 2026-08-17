@@ -7,6 +7,8 @@ from src.infrastructure.controllers import (
     UserController,
     EventController,
     EventPhotoController,
+    EventCommentController,
+    NotificationController,
 )
 from contextlib import asynccontextmanager
 from src.core.middlewares.auth_middleware import AuthMiddleware
@@ -21,6 +23,8 @@ app = FastAPI(title="SCF API", version="1.0.0", lifespan=lifespan)
 app.add_middleware(AuthMiddleware)
 
 app.include_router(AuthController.router)
+app.include_router(NotificationController.router)
+app.include_router(EventCommentController.router)
 app.include_router(CentralOfficeController.router)
 app.include_router(UserController.router)
 app.include_router(EventController.router)
@@ -34,4 +38,4 @@ def health():
     }
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

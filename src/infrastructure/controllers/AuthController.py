@@ -9,7 +9,7 @@ from src.application.usecases.LoginUseCase import (
     InactiveUserError,
 )
 from src.domain.schemas.AuthSchema import LoginSchema
-from src.application.dtos.auth_response import LoginResponse
+from src.application.dtos.responses.auth_response import LoginResponse
 from src.application.mappers.user_mapper import UserMapper
 
 router = APIRouter(prefix="/auth", tags=["auth"])
