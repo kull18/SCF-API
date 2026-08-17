@@ -97,6 +97,9 @@ class Event(Base):
     photos = relationship(
         "EventPhoto", back_populates="event", cascade="all, delete-orphan"
     )
+    comments = relationship(
+        "EventComment", back_populates="event", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         CheckConstraint(
