@@ -8,6 +8,7 @@ from src.infrastructure.controllers import (
     EventController,
     EventPhotoController,
     EventCommentController,
+    NotificationController,
 )
 from contextlib import asynccontextmanager
 from src.core.middlewares.auth_middleware import AuthMiddleware
@@ -22,6 +23,7 @@ app = FastAPI(title="SCF API", version="1.0.0", lifespan=lifespan)
 app.add_middleware(AuthMiddleware)
 
 app.include_router(AuthController.router)
+app.include_router(NotificationController.router)
 app.include_router(EventCommentController.router)
 app.include_router(CentralOfficeController.router)
 app.include_router(UserController.router)

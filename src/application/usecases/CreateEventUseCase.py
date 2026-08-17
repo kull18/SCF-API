@@ -1,11 +1,12 @@
 from src.domain.models.Event import Event
 from src.infrastructure.repositories.EventRepository import EventRepository
 from src.services.geo import coords_from_point
-
+from src.application.usecases.NotifyEventCreatedUseCase import NotifyEventCreatedUseCase
 
 class CreateEventUseCase:
-    def __init__(self, repository: EventRepository):
+    def __init__(self, repository: EventRepository, notify_use_case: NotifyEventCreatedUseCase):
         self._repository = repository
+        self._notify_use_case = notify_use_case
 
     async def execute(self, event: Event) -> Event:
         latitude, longitude = coords_from_point(event.location)
@@ -17,4 +18,6 @@ class CreateEventUseCase:
             event.destination_office_id, latitude, longitude
         )
 
-        return await self._repository.create(event)
+        created = await self._repository.create(event)
+        await self._notify_use_case.execute(created)
+        return created
