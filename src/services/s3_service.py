@@ -1,5 +1,5 @@
 import uuid
-
+from botocore.exceptions import ClientError
 import boto3
 from botocore.exceptions import ClientError
 
@@ -41,3 +41,22 @@ def delete_object(object_key: str) -> None:
         _s3_client.delete_object(Bucket=settings.S3_BUCKET_NAME, Key=object_key)
     except ClientError as e:
         raise RuntimeError(f"Failed to delete S3 object {object_key}: {e}")
+
+def build_profile_photo_key(user_id: int, filename: str) -> str:
+    extension = filename.rsplit(".", 1)[-1] if "." in filename else "jpg"
+    return f"profiles/{user_id}/{uuid.uuid4()}.{extension}"
+
+def build_content_addressed_key(prefix: str, entity_id: int, content_hash: str, filename: str) -> str:
+    extension = filename.rsplit(".", 1)[-1] if "." in filename else "jpg"
+    return f"{prefix}/{entity_id}/{content_hash}.{extension}"
+
+
+def object_exists(object_key: str) -> bool:
+    try:
+        _s3_client.head_object(Bucket=settings.s3_bucket_name, Key=object_key)
+        return True
+    except ClientError as e:
+        error_code = e.response.get("Error", {}).get("Code", "")
+        if error_code in ("404", "NoSuchKey"):
+            return False
+        raise

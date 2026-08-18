@@ -12,6 +12,8 @@ class UserResponse(BaseModel):
     phone: str
     email: str | None
     role: UserRole
+    job_title: str | None
+    profile_photo_url: str | None  # URL prefirmada, generada al responder
     is_active: bool
     profile_completed: bool
     created_at: datetime

@@ -27,3 +27,9 @@ class UserRepository:
         await self._session.commit()
         await self._session.refresh(user)
         return user
+    
+    async def list_active(self) -> list[User]:
+     result = await self._session.execute(
+        select(User).where(User.is_active.is_(True)).order_by(User.full_name)
+     )
+     return list(result.scalars().all())

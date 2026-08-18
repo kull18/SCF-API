@@ -15,14 +15,15 @@ class NotifyEventCreatedUseCase:
         self._user_repository = user_repository
 
     async def execute(self, event: Event) -> None:
-        # TODO: definir a quiénes se notifica (ej. todos los técnicos activos,
-        # o solo los de la central involucrada). Por ahora, ejemplo con todos.
-        users = await self._user_repository.list()
+        users = await self._user_repository.list_active()
 
         title = "Nuevo corte de fibra reportado"
         body = f"Tramo {event.origin_office_id} → {event.destination_office_id}"
 
         for user in users:
+            if user.id == event.reported_by_id:
+                continue  # no autonotificar a quien reportó el evento
+
             notification = Notification(
                 user_id=user.id,
                 title=title,

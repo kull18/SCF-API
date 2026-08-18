@@ -24,6 +24,8 @@ class User(Base):
     role: Mapped[UserRole] = mapped_column(
         SAEnum(UserRole, name="user_role"), default=UserRole.TECNICO, nullable=False
     )
+    job_title: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    profile_photo_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     profile_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
