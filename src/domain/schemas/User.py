@@ -12,6 +12,8 @@ class BulkUserCreateSchema(BaseModel):
 class CompleteProfileSchema(BaseModel):
     full_name: str = Field(max_length=150)
     email: str | None = None
+    job_title: str | None = Field(default=None, max_length=100)
+    profile_photo_key: str | None = None
 
 
 class UserUpdateSchema(BaseModel):
