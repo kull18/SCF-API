@@ -2,9 +2,19 @@
 
 Sistema de reporte y gestión de cortes de fibra óptica para técnicos de campo. Permite registrar centrales de red, reportar eventos de corte con ubicación geográfica (GPS o manual), calcular distancias automáticamente, y adjuntar evidencia fotográfica.
 
+## Features
+
+- Autenticación de usuarios y control de accesos basados en roles.
+- Registro y gestión de usuarios.
+- CRUD de centrales de red.
+- Reporte y gestión (CRUD) de eventos de corte de fibra.
+- Notificaciones en tiempo real integradas con OneSignal.
+
 ## Arquitectura
 
 Onion Architecture (3 capas + núcleo transversal):
+
+![Arquitectura](diagrams/arquitectura.jpg)
 
 - **domain/**: `models` (entidades SQLAlchemy) y `schemas` (contratos de entrada, Pydantic). No depende de ninguna otra capa.
 - **application/**: `usecases` (lógica de orquestación y reglas de negocio), `dtos` (contratos de salida, Pydantic), `mappers` (Schema → Model, Model → DTO).
@@ -18,7 +28,7 @@ scf/
 ├── README.md
 ├── main.py
 ├── diagrams/
-│   ├── architecture.jpg
+│   ├── arquitectura.jpg
 │   └── DTO_impl.jpg
 └── src/
     ├── domain/
@@ -93,3 +103,5 @@ scf/
 ```
 
 **Flujo de una petición (ejemplo: crear evento):**
+
+![Implementación de DTO](diagrams/DTO_impl.jpg)
