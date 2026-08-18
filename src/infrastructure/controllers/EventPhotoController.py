@@ -12,8 +12,25 @@ from src.application.usecases.ListEventPhotosUseCase import ListEventPhotosUseCa
 from src.domain.schemas.EventPhoto import EventPhotoCreateSchema
 from src.application.dtos.responses.event_photo_response import EventPhotoResponse
 from src.application.mappers.event_photo_mapper import EventPhotoMapper
+from src.services.s3_service import build_event_photo_key, generate_upload_presigned_url
 
 router = APIRouter(prefix="/event-photos", tags=["event-photos"])
+
+
+@router.get("/upload-url")
+async def get_upload_url(
+    event_id: int,
+    filename: str,
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO)),
+):
+    object_key = build_event_photo_key(event_id, filename)
+    upload_url = generate_upload_presigned_url(object_key)
+
+    return {
+        "upload_url": upload_url,
+        "object_key": object_key,
+    }
 
 
 @router.post("", response_model=EventPhotoResponse, status_code=201)

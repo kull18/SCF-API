@@ -7,6 +7,14 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     ONESIGNAL_APP_ID: str = ""
     ONESIGNAL_REST_API_KEY: str = ""
+    AWS_ACCESS_KEY_ID: str = ""
+    AWS_SECRET_ACCESS_KEY: str = ""
+    AWS_REGION: str = "us-east-1"
+    S3_BUCKET_NAME: str = ""
+    WHATSAPP_PHONE_NUMBER_ID: str = ""
+    WHATSAPP_ACCESS_TOKEN: str = ""
+    WHATSAPP_TEMPLATE_NAME: str = ""
+    WHATSAPP_TEMPLATE_LANGUAGE: str = ""
 
     model_config = SettingsConfigDict(env_file=".env")
 
