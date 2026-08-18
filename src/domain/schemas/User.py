@@ -1,15 +1,21 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 
-class UserCreateSchema(BaseModel):
+class BulkUserCreateItemSchema(BaseModel):
+    phone: str = Field(max_length=20, description="Numero para WhatsApp/SMS, ej. +529611234567")
+
+
+class BulkUserCreateSchema(BaseModel):
+    users: list[BulkUserCreateItemSchema] = Field(min_length=1, max_length=100)
+
+
+class CompleteProfileSchema(BaseModel):
     full_name: str = Field(max_length=150)
-    phone: str | None = Field(default=None, max_length=20)
-    email: EmailStr | None = None
-    password: str = Field(min_length=8, max_length=72)
+    email: str | None = None
 
 
 class UserUpdateSchema(BaseModel):
     full_name: str | None = None
     phone: str | None = None
-    email: EmailStr | None = None
+    email: str | None = None
     is_active: bool | None = None
