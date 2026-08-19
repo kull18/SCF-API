@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.session import get_session
 from src.core.middlewares.role_middleware import get_current_user
 from src.core.middlewares.role_middleware import require_role
 from src.domain.models.User import User, UserRole
+from src.core.middlewares.rate_limiter import limiter
 from src.infrastructure.repositories.UserRepository import UserRepository
 from src.application.usecases.BulkCreateUsersUseCase import BulkCreateUsersUseCase
 from src.application.usecases.CompleteProfileUseCase import CompleteProfileUseCase
@@ -27,7 +28,9 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.post("/bulk", response_model=list[BulkUserCreatedResponse], status_code=201)
+@limiter.limit("3/hour")
 async def bulk_create_users(
+    request: Request,
     schema: BulkUserCreateSchema,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),

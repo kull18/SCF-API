@@ -2,7 +2,7 @@ import logging
 from sqlalchemy import text
 from src.core.base import Base
 from src.core.session import engine
-from src.domain.models import CentralOffice, User, Event, EventPhoto, EventComment  # noqa: F401
+from src.domain.models import CentralOffice, User, Event, EventPhoto, EventComment, Notification, RevokedToken  # noqa: F401
 
 logger = logging.getLogger(__name__)
 

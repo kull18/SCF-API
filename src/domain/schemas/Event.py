@@ -6,12 +6,12 @@ from src.domain.models.Event import LocationMethod
 class EventCreateSchema(BaseModel):
     origin_office_id: int
     destination_office_id: int
-    latitude: float
-    longitude: float
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
     location_method: LocationMethod
-    accuracy: float | None = Field(default=None, description="Meters, required if GPS")
-    field_reference: str | None = None
-    description: str
+    accuracy: float | None = Field(default=None, ge=0, le=10000)
+    field_reference: str | None = Field(default=None, max_length=500)
+    description: str = Field(max_length=2000) 
 
     @model_validator(mode="after")
     def check_offices_differ(self):
