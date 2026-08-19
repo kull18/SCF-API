@@ -33,8 +33,7 @@ class EventCommentRepository:
         return result.scalar_one_or_none()
 
     async def delete(self, comment_id: int) -> None:
-        comment = await self._session.get(EventComment, comment_id)
-        if comment is None:
-            raise ValueError(f"EventComment with id={comment_id} not found")
+     comment = await self._session.get(EventComment, comment_id)
+     if comment is not None:
         await self._session.delete(comment)
         await self._session.commit()

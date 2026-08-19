@@ -30,11 +30,11 @@ class NotificationRepository:
         )
         return result.scalar_one()
 
-    async def mark_as_read(self, notification_id: int) -> Notification:
-        notification = await self._session.get(Notification, notification_id)
-        if notification is None:
-            raise ValueError(f"Notification with id={notification_id} not found")
-        notification.is_read = True
+    async def get_by_id(self, notification_id: int) -> Notification | None:
+        return await self._session.get(Notification, notification_id)
+
+    async def update(self, notification: Notification) -> Notification:
         await self._session.commit()
         await self._session.refresh(notification)
         return notification
+    

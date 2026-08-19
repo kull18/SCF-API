@@ -1,28 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.session import get_session
+from src.core.middlewares.rate_limiter import limiter
 from src.core.middlewares.role_middleware import get_current_user
 from src.core.middlewares.role_middleware import require_role
 from src.domain.models.User import User, UserRole
-from src.core.middlewares.rate_limiter import limiter
 from src.infrastructure.repositories.UserRepository import UserRepository
 from src.application.usecases.BulkCreateUsersUseCase import BulkCreateUsersUseCase
 from src.application.usecases.CompleteProfileUseCase import CompleteProfileUseCase
-from src.domain.schemas.User import (
-    BulkUserCreateSchema,
-    CompleteProfileSchema,
-    UserUpdateSchema,
-)
+from src.domain.schemas.User import BulkUserCreateSchema, CompleteProfileSchema
 from src.application.dtos.responses.user_response import (
     UserResponse,
     BulkUserCreatedResponse,
 )
-from src.services.s3_service import (
-    build_profile_photo_key,
-    generate_upload_presigned_url,
-)
 from src.application.mappers.user_mapper import UserMapper
+from src.services.s3_service import build_profile_photo_key, generate_upload_presigned_url
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -38,10 +31,8 @@ async def bulk_create_users(
 ):
     repository = UserRepository(session)
     use_case = BulkCreateUsersUseCase(repository)
-
     phones = [item.phone for item in schema.users]
     created = await use_case.execute(phones)
-
     return created
 
 
@@ -55,6 +46,7 @@ async def list_users(
     users = await repository.list()
     return [UserMapper.model_to_response(u) for u in users]
 
+
 @router.get("/me/profile-photo-upload-url")
 async def get_profile_photo_upload_url(
     filename: str,
@@ -63,11 +55,7 @@ async def get_profile_photo_upload_url(
 ):
     object_key = build_profile_photo_key(current_user.id, filename)
     upload_url = generate_upload_presigned_url(object_key)
-
-    return {
-        "upload_url": upload_url,
-        "object_key": object_key,
-    }
+    return {"upload_url": upload_url, "object_key": object_key}
 
 
 @router.patch("/me/complete-profile", response_model=UserResponse)
@@ -79,7 +67,6 @@ async def complete_profile(
 ):
     repository = UserRepository(session)
     use_case = CompleteProfileUseCase(repository)
-
     updated = await use_case.execute(
         current_user,
         schema.full_name,

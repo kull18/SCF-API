@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.session import get_session
@@ -6,21 +6,11 @@ from src.core.middlewares.role_middleware import get_current_user
 from src.core.middlewares.role_middleware import require_role
 from src.domain.models.User import User, UserRole
 from src.infrastructure.repositories.CentralOfficeRepository import CentralOfficeRepository
-from src.application.usecases.CreateCentralOfficeUseCase import (
-    CreateCentralOfficeUseCase,
-)
-from src.application.usecases.ListCentralOfficesUseCase import (
-    ListCentralOfficesUseCase,
-)
-from src.application.usecases.GetCentralOfficeUseCase import (
-    GetCentralOfficeUseCase,
-)
-from src.application.usecases.UpdateCentralOfficeUseCase import (
-    UpdateCentralOfficeUseCase,
-)
-from src.application.usecases.DeleteCentralOfficeUseCase import (
-    DeleteCentralOfficeUseCase,
-)
+from src.application.usecases.CreateCentralOfficeUseCase import CreateCentralOfficeUseCase
+from src.application.usecases.ListCentralOfficesUseCase import ListCentralOfficesUseCase
+from src.application.usecases.GetCentralOfficeUseCase import GetCentralOfficeUseCase
+from src.application.usecases.UpdateCentralOfficeUseCase import UpdateCentralOfficeUseCase
+from src.application.usecases.DeleteCentralOfficeUseCase import DeleteCentralOfficeUseCase
 from src.domain.schemas.CentralOffice import (
     CentralOfficeCreateSchema,
     CentralOfficeUpdateSchema,
@@ -40,13 +30,8 @@ async def create_central_office(
 ):
     repository = CentralOfficeRepository(session)
     use_case = CreateCentralOfficeUseCase(repository)
-
-    try:
-        model = CentralOfficeMapper.schema_to_model(schema)
-        created = await use_case.execute(model)
-    except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
-
+    model = CentralOfficeMapper.schema_to_model(schema)
+    created = await use_case.execute(model)
     return CentralOfficeMapper.model_to_response(created)
 
 
@@ -58,7 +43,6 @@ async def list_central_offices(
 ):
     repository = CentralOfficeRepository(session)
     use_case = ListCentralOfficesUseCase(repository)
-
     offices = await use_case.execute()
     return [CentralOfficeMapper.model_to_response(o) for o in offices]
 
@@ -72,12 +56,7 @@ async def get_central_office(
 ):
     repository = CentralOfficeRepository(session)
     use_case = GetCentralOfficeUseCase(repository)
-
-    try:
-        office = await use_case.execute(office_id)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
+    office = await use_case.execute(office_id)
     return CentralOfficeMapper.model_to_response(office)
 
 
@@ -91,12 +70,7 @@ async def update_central_office(
 ):
     repository = CentralOfficeRepository(session)
     use_case = UpdateCentralOfficeUseCase(repository)
-
-    try:
-        updated = await use_case.execute(office_id, schema)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
+    updated = await use_case.execute(office_id, schema)
     return CentralOfficeMapper.model_to_response(updated)
 
 
@@ -109,8 +83,4 @@ async def delete_central_office(
 ):
     repository = CentralOfficeRepository(session)
     use_case = DeleteCentralOfficeUseCase(repository)
-
-    try:
-        await use_case.execute(office_id)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    await use_case.execute(office_id)

@@ -38,7 +38,7 @@ class CentralOfficeRepository:
 
     async def delete(self, office_id: int) -> None:
         office = await self._session.get(CentralOffice, office_id)
-        if office is None:
-            raise ValueError(f"CentralOffice with id={office_id} not found")
-        await self._session.delete(office)
-        await self._session.commit()
+
+        if office is not None:
+         await self._session.delete(office)
+         await self._session.commit()

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.session import get_session
@@ -12,7 +12,11 @@ from src.application.usecases.ListEventPhotosUseCase import ListEventPhotosUseCa
 from src.domain.schemas.EventPhoto import EventPhotoCreateSchema
 from src.application.dtos.responses.event_photo_response import EventPhotoResponse
 from src.application.mappers.event_photo_mapper import EventPhotoMapper
-from src.services.s3_service import build_event_photo_key, generate_upload_presigned_url
+from src.services.s3_service import (
+    build_content_addressed_key,
+    generate_upload_presigned_url,
+    object_exists,
+)
 
 router = APIRouter(prefix="/event-photos", tags=["event-photos"])
 
@@ -21,16 +25,17 @@ router = APIRouter(prefix="/event-photos", tags=["event-photos"])
 async def get_upload_url(
     event_id: int,
     filename: str,
+    content_hash: str,
     current_user: User = Depends(get_current_user),
     _: str = Depends(require_role(UserRole.TECNICO)),
 ):
-    object_key = build_event_photo_key(event_id, filename)
-    upload_url = generate_upload_presigned_url(object_key)
+    object_key = build_content_addressed_key("events", event_id, content_hash, filename)
 
-    return {
-        "upload_url": upload_url,
-        "object_key": object_key,
-    }
+    if object_exists(object_key):
+        return {"upload_url": None, "object_key": object_key, "already_exists": True}
+
+    upload_url = generate_upload_presigned_url(object_key)
+    return {"upload_url": upload_url, "object_key": object_key, "already_exists": False}
 
 
 @router.post("", response_model=EventPhotoResponse, status_code=201)
@@ -44,11 +49,8 @@ async def create_event_photo(
     event_repository = EventRepository(session)
     use_case = CreateEventPhotoUseCase(photo_repository, event_repository)
 
-    try:
-        model = EventPhotoMapper.schema_to_model(schema)
-        created = await use_case.execute(model)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    model = EventPhotoMapper.schema_to_model(schema)
+    created = await use_case.execute(model)
 
     return EventPhotoMapper.model_to_response(created)
 

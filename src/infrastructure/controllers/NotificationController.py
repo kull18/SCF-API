@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.session import get_session
@@ -6,6 +6,9 @@ from src.core.middlewares.role_middleware import get_current_user
 from src.core.middlewares.role_middleware import require_role
 from src.domain.models.User import User, UserRole
 from src.infrastructure.repositories.NotificationRepository import NotificationRepository
+from src.application.usecases.MarkNotificationAsReadUseCase import (
+    MarkNotificationAsReadUseCase,
+)
 from src.domain.schemas.Notification import DeviceTokenSchema
 from src.application.dtos.responses.notification_response import NotificationResponse
 from src.application.mappers.notification_mapper import NotificationMapper
@@ -43,10 +46,8 @@ async def mark_as_read(
     _: str = Depends(require_role(UserRole.TECNICO)),
 ):
     repository = NotificationRepository(session)
-    try:
-        updated = await repository.mark_as_read(notification_id)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    use_case = MarkNotificationAsReadUseCase(repository)
+    updated = await use_case.execute(notification_id)
     return NotificationMapper.model_to_response(updated)
 
 

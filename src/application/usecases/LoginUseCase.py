@@ -2,13 +2,12 @@ from src.infrastructure.repositories.UserRepository import UserRepository
 from src.services.password_service import verify_password
 from src.services.token_service import create_access_token
 from src.domain.models.User import User
+from src.core.exceptions import ForbiddenError
 
 
 class InvalidCredentialsError(Exception):
-    pass
-
-
-class InactiveUserError(Exception):
+    """Se mantiene separada de AppError a proposito: no queremos que un 401
+    de login se confunda con errores 403/404/409 genericos de negocio."""
     pass
 
 
@@ -23,7 +22,7 @@ class LoginUseCase:
             raise InvalidCredentialsError("Invalid technician_code or password")
 
         if not user.is_active:
-            raise InactiveUserError("This user account is inactive")
+            raise ForbiddenError("This user account is inactive")
 
         token = create_access_token(subject=user.technician_code, role=user.role.value)
         return user, token

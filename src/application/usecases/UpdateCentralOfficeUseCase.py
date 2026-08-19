@@ -2,6 +2,7 @@ from src.domain.schemas.CentralOffice import CentralOfficeUpdateSchema
 from src.domain.models.CentralOffice import CentralOffice
 from src.infrastructure.repositories.CentralOfficeRepository import CentralOfficeRepository
 from src.services.geo import point_from_coords, coords_from_point
+from src.core.exceptions import NotFoundError
 
 
 class UpdateCentralOfficeUseCase:
@@ -13,7 +14,7 @@ class UpdateCentralOfficeUseCase:
     ) -> CentralOffice:
         office = await self._repository.get_by_id(office_id)
         if office is None:
-            raise ValueError(f"CentralOffice with id={office_id} not found")
+            raise NotFoundError(f"CentralOffice with id={office_id} not found")
 
         data = schema.model_dump(exclude_unset=True)
 

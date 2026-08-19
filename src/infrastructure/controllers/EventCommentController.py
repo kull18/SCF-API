@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.session import get_session
@@ -28,11 +28,8 @@ async def create_event_comment(
     event_repository = EventRepository(session)
     use_case = CreateEventCommentUseCase(comment_repository, event_repository)
 
-    try:
-        model = EventCommentMapper.schema_to_model(schema, user_id=current_user.id)
-        created = await use_case.execute(model)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    model = EventCommentMapper.schema_to_model(schema, user_id=current_user.id)
+    created = await use_case.execute(model)
 
     return EventCommentMapper.model_to_response(created)
 
@@ -46,7 +43,6 @@ async def list_event_comments(
 ):
     repository = EventCommentRepository(session)
     use_case = ListEventCommentsUseCase(repository)
-
     comments = await use_case.execute(event_id)
     return [EventCommentMapper.model_to_response(c) for c in comments]
 
@@ -60,10 +56,4 @@ async def delete_event_comment(
 ):
     repository = EventCommentRepository(session)
     use_case = DeleteEventCommentUseCase(repository)
-
-    try:
-        await use_case.execute(comment_id, requesting_user_id=current_user.id)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except PermissionError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+    await use_case.execute(comment_id, requesting_user_id=current_user.id)
