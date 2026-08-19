@@ -4,6 +4,8 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from src.services.token_service import decode_access_token
+from src.core.session import AsyncSessionLocal
+from src.infrastructure.repositories.RevokedTokenRepository import RevokedTokenRepository
 
 PUBLIC_PATHS = {
     "/auth/login",
@@ -35,7 +37,18 @@ class AuthMiddleware(BaseHTTPMiddleware):
         except jwt.InvalidTokenError:
             return JSONResponse(status_code=401, content={"detail": "Invalid token"})
 
+        jti = payload.get("jti")
+        if jti is not None:
+            async with AsyncSessionLocal() as session:
+                repository = RevokedTokenRepository(session)
+                if await repository.is_revoked(jti):
+                    return JSONResponse(
+                        status_code=401, content={"detail": "Token has been revoked"}
+                    )
+
         request.state.technician_code = payload.get("sub")
         request.state.role = payload.get("role")
+        request.state.jti = payload.get("jti")
+        request.state.token_exp = payload.get("exp")
 
         return await call_next(request)

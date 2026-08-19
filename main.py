@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
 from src.core.init_db import init_db
+from src.core.config import settings
 from src.infrastructure.controllers import (
     AuthController,
     CentralOfficeController,
@@ -12,6 +13,14 @@ from src.infrastructure.controllers import (
 )
 from contextlib import asynccontextmanager
 from src.core.middlewares.auth_middleware import AuthMiddleware
+from fastapi.middleware.cors import CORSMiddleware
+from src.core.middlewares.body_size_middleware import BodySizeLimitMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
+from src.core.middlewares.rate_limiter import limiter
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,7 +28,18 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(title="SCF API", version="1.0.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
+)
 
+app.add_middleware(BodySizeLimitMiddleware)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(AuthMiddleware)
 
 app.include_router(AuthController.router)
