@@ -1,6 +1,7 @@
 from src.domain.models.EventPhoto import EventPhoto
 from src.infrastructure.repositories.EventPhotoRepository import EventPhotoRepository
 from src.infrastructure.repositories.EventRepository import EventRepository
+from src.core.exceptions import NotFoundError
 
 
 class CreateEventPhotoUseCase:
@@ -13,6 +14,6 @@ class CreateEventPhotoUseCase:
     async def execute(self, photo: EventPhoto) -> EventPhoto:
         event = await self._event_repository.get_by_id(photo.event_id)
         if event is None:
-            raise ValueError(f"Event with id={photo.event_id} not found")
+            raise NotFoundError(f"Event with id={photo.event_id} not found")
 
         return await self._photo_repository.create(photo)

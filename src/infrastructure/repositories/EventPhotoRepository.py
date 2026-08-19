@@ -21,8 +21,7 @@ class EventPhotoRepository:
         return list(result.scalars().all())
 
     async def delete(self, photo_id: int) -> None:
-        photo = await self._session.get(EventPhoto, photo_id)
-        if photo is None:
-            raise ValueError(f"EventPhoto with id={photo_id} not found")
+     photo = await self._session.get(EventPhoto, photo_id)
+     if photo is not None:
         await self._session.delete(photo)
         await self._session.commit()
