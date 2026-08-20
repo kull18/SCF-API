@@ -1,6 +1,6 @@
 # Base de datos
 
-PostgreSQL + PostGIS. Ver [ADR 001](decisions/001-use-postgresql.md) para el razonamiento de esta elección.
+PostgreSQL + PostGIS.
 
 ## Diagrama entidad-relación
 
