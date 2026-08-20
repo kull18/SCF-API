@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     WHATSAPP_TEMPLATE_NAME: str = ""
     WHATSAPP_TEMPLATE_LANGUAGE: str = ""
     ALLOWED_ORIGINS: list[str] = []
+    DB_PASSWORD: str = ""
 
     model_config = SettingsConfigDict(env_file=".env")
 
