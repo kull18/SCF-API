@@ -3,14 +3,17 @@ from src.infrastructure.repositories.UserRepository import UserRepository
 from src.services.password_service import hash_password
 from src.services.technician_code_service import generate_technician_code
 from src.services.temp_password_service import generate_temp_password
-from src.services.whatsapp_service import send_credentials_whatsapp
+from src.application.strategies.credential_sender_context import CredentialSenderContext
 
 MAX_CODE_ATTEMPTS = 10
 
 
 class BulkCreateUsersUseCase:
-    def __init__(self, repository: UserRepository):
+    def __init__(
+        self, repository: UserRepository, credential_sender_context: CredentialSenderContext
+    ):
         self._repository = repository
+        self._credential_sender_context = credential_sender_context
 
     async def execute(self, phones: list[str]) -> list[dict]:
         results = []
@@ -30,7 +33,7 @@ class BulkCreateUsersUseCase:
 
             created = await self._repository.create(user)
 
-            whatsapp_sent = await send_credentials_whatsapp(
+            sent = await self._credential_sender_context.send_credentials(
                 phone=phone,
                 technician_code=technician_code,
                 temp_password=temp_password,
@@ -41,7 +44,7 @@ class BulkCreateUsersUseCase:
                 "technician_code": created.technician_code,
                 "phone": created.phone,
                 "temp_password": temp_password,
-                "whatsapp_sent": whatsapp_sent,
+                "credentials_sent": sent,
             })
 
         return results
