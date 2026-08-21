@@ -16,6 +16,7 @@ from src.application.dtos.responses.user_response import (
 )
 from src.application.mappers.user_mapper import UserMapper
 from src.services.s3_service import build_profile_photo_key, generate_upload_presigned_url
+from src.services.credential_sender_factory import get_credential_sender_context
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -30,9 +31,12 @@ async def bulk_create_users(
     _: str = Depends(require_role(UserRole.ADMIN)),
 ):
     repository = UserRepository(session)
-    use_case = BulkCreateUsersUseCase(repository)
+    credential_sender_context = get_credential_sender_context()
+    use_case = BulkCreateUsersUseCase(repository, credential_sender_context)
+
     phones = [item.phone for item in schema.users]
     created = await use_case.execute(phones)
+
     return created
 
 

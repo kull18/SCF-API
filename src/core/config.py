@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     WHATSAPP_TEMPLATE_LANGUAGE: str = ""
     ALLOWED_ORIGINS: list[str] = []
     DB_PASSWORD: str = ""
+    CREDENTIAL_SENDER_PROVIDER: str =""
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_WHATSAPP_FROM: str = ""
+    TWILIO_CONTENT_SID: str = ""
 
     model_config = SettingsConfigDict(env_file=".env")
 
