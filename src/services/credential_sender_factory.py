@@ -7,7 +7,7 @@ from src.services.twilio_whatsapp_service import TwilioWhatsAppCredentialSender
 def get_credential_sender_context() -> CredentialSenderContext:
     """El cliente: lee la configuracion, elige la estrategia concreta,
     y la inyecta en un Context listo para usar."""
-    if settings.credential_sender_provider == "twilio":
+    if settings.CREDENTIAL_SENDER_PROVIDER == "twilio":
         strategy = TwilioWhatsAppCredentialSender()
     else:
         strategy = WhatsAppCredentialSender()

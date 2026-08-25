@@ -10,13 +10,14 @@ class CentralOfficeSummaryResponse(BaseModel):
     id: int
     prefix: str
     name: str
+    city: str
 
 
 class EventResponse(BaseModel):
     id: int
     type: EventType
-    origin_office_id: int
-    destination_office_id: int
+    origin_office: CentralOfficeSummaryResponse
+    destination_office: CentralOfficeSummaryResponse
     latitude: float
     longitude: float
     location_method: LocationMethod

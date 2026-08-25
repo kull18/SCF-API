@@ -26,9 +26,8 @@ class LocationMethod(str, enum.Enum):
 
 class EventStatus(str, enum.Enum):
     ACTIVE = "ACTIVE"
-    PENDING = "PENDING"
     RESOLVED = "RESOLVED"
-
+    CLOSED = "CLOSED"
 
 class Event(Base):
     """Sections 13 and 14 of the design document."""

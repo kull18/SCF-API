@@ -1,7 +1,11 @@
 from src.domain.schemas.Event import EventCreateSchema
-from src.application.dtos.responses.event_response import EventResponse
+from src.application.dtos.responses.event_response import (
+    EventResponse,
+    CentralOfficeSummaryResponse,
+)
 from src.application.mappers.event_photo_mapper import EventPhotoMapper
 from src.domain.models.Event import Event, EventType, EventStatus
+from src.domain.models.CentralOffice import CentralOffice
 from src.services.geo import point_from_coords, coords_from_point
 
 
@@ -15,7 +19,7 @@ class EventMapper:
             location=point_from_coords(schema.latitude, schema.longitude),
             location_method=schema.location_method,
             accuracy=schema.accuracy,
-            distance_to_origin=0,   # se llena en el UseCase antes de persistir
+            distance_to_origin=0,
             distance_to_destination=0,
             field_reference=schema.field_reference,
             description=schema.description,
@@ -24,13 +28,25 @@ class EventMapper:
         )
 
     @staticmethod
-    def model_to_response(model: Event) -> EventResponse:
+    def model_to_response(
+        model: Event, origin_office: CentralOffice, destination_office: CentralOffice
+    ) -> EventResponse:
         latitude, longitude = coords_from_point(model.location)
         return EventResponse(
             id=model.id,
             type=model.type,
-            origin_office_id=model.origin_office_id,
-            destination_office_id=model.destination_office_id,
+            origin_office=CentralOfficeSummaryResponse(
+                id=origin_office.id,
+                prefix=origin_office.prefix,
+                name=origin_office.name,
+                city=origin_office.city,
+            ),
+            destination_office=CentralOfficeSummaryResponse(
+                id=destination_office.id,
+                prefix=destination_office.prefix,
+                name=destination_office.name,
+                city=destination_office.city,
+            ),
             latitude=latitude,
             longitude=longitude,
             location_method=model.location_method,

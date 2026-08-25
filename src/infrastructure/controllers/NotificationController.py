@@ -20,7 +20,7 @@ router = APIRouter(prefix="/notifications", tags=["notifications"])
 async def list_notifications(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = NotificationRepository(session)
     notifications = await repository.list_by_user(current_user.id)
@@ -31,7 +31,7 @@ async def list_notifications(
 async def get_unread_count(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = NotificationRepository(session)
     count = await repository.count_unread(current_user.id)
@@ -43,7 +43,7 @@ async def mark_as_read(
     notification_id: int,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = NotificationRepository(session)
     use_case = MarkNotificationAsReadUseCase(repository)
@@ -56,7 +56,7 @@ async def register_device_token(
     schema: DeviceTokenSchema,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     current_user.onesignal_player_id = schema.player_id
     await session.commit()

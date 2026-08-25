@@ -27,7 +27,7 @@ async def get_upload_url(
     filename: str,
     content_hash: str,
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     object_key = build_content_addressed_key("events", event_id, content_hash, filename)
 
@@ -43,7 +43,7 @@ async def create_event_photo(
     schema: EventPhotoCreateSchema,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     photo_repository = EventPhotoRepository(session)
     event_repository = EventRepository(session)
@@ -60,7 +60,7 @@ async def list_event_photos(
     event_id: int,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = EventPhotoRepository(session)
     use_case = ListEventPhotosUseCase(repository)

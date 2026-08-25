@@ -26,7 +26,7 @@ async def create_central_office(
     schema: CentralOfficeCreateSchema,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = CentralOfficeRepository(session)
     use_case = CreateCentralOfficeUseCase(repository)
@@ -39,7 +39,7 @@ async def create_central_office(
 async def list_central_offices(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = CentralOfficeRepository(session)
     use_case = ListCentralOfficesUseCase(repository)
@@ -52,7 +52,7 @@ async def get_central_office(
     office_id: int,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = CentralOfficeRepository(session)
     use_case = GetCentralOfficeUseCase(repository)
@@ -66,7 +66,7 @@ async def update_central_office(
     schema: CentralOfficeUpdateSchema,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = CentralOfficeRepository(session)
     use_case = UpdateCentralOfficeUseCase(repository)
@@ -79,7 +79,7 @@ async def delete_central_office(
     office_id: int,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = CentralOfficeRepository(session)
     use_case = DeleteCentralOfficeUseCase(repository)
