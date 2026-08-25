@@ -1,4 +1,5 @@
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.models.Event import Event, EventStatus
@@ -16,10 +17,23 @@ class EventRepository:
         return event
 
     async def get_by_id(self, event_id: int) -> Event | None:
-        return await self._session.get(Event, event_id)
+        result = await self._session.execute(
+            select(Event)
+            .options(
+                selectinload(Event.origin_office),
+                selectinload(Event.destination_office),
+                selectinload(Event.photos),
+            )
+            .where(Event.id == event_id)
+        )
+        return result.scalar_one_or_none()
 
     async def list(self, status: EventStatus | None = None) -> list[Event]:
-        query = select(Event)
+        query = select(Event).options(
+            selectinload(Event.origin_office),
+            selectinload(Event.destination_office),
+            selectinload(Event.photos),
+        )
         if status:
             query = query.where(Event.status == status)
         result = await self._session.execute(query.order_by(Event.reported_at.desc()))
