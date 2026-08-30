@@ -28,7 +28,12 @@ class EventRepository:
         )
         return result.scalar_one_or_none()
 
-    async def list(self, status: EventStatus | None = None) -> list[Event]:
+
+    async def list(
+        self,
+        status: EventStatus | None = None,
+        reported_by_id: int | None = None,
+    ) -> list[Event]:
         query = select(Event).options(
             selectinload(Event.origin_office),
             selectinload(Event.destination_office),
@@ -36,6 +41,9 @@ class EventRepository:
         )
         if status:
             query = query.where(Event.status == status)
+        if reported_by_id:
+            query = query.where(Event.reported_by_id == reported_by_id)
+
         result = await self._session.execute(query.order_by(Event.reported_at.desc()))
         return list(result.scalars().all())
 

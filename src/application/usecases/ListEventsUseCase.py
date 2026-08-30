@@ -6,5 +6,9 @@ class ListEventsUseCase:
     def __init__(self, repository: EventRepository):
         self._repository = repository
 
-    async def execute(self, status: EventStatus | None = None) -> list[Event]:
-        return await self._repository.list(status=status)
+    async def execute(
+        self,
+        status: EventStatus | None = None,
+        reported_by_id: int | None = None,
+    ) -> list[Event]:
+        return await self._repository.list(status=status, reported_by_id=reported_by_id)
