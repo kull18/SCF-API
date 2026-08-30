@@ -48,13 +48,19 @@ async def create_event(
 @router.get("", response_model=list[EventResponse])
 async def list_events(
     status: EventStatus | None = Query(default=None),
+    reported_by: str | None = Query(
+        default=None, description="Usa 'me' para filtrar solo eventos propios"
+    ),
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
+    _: str = Depends(require_role(UserRole.TECNICO)),
 ):
     repository = EventRepository(session)
     use_case = ListEventsUseCase(repository)
-    events = await use_case.execute(status=status)
+
+    reported_by_id = current_user.id if reported_by == "me" else None
+    events = await use_case.execute(status=status, reported_by_id=reported_by_id)
+
     return [
         EventMapper.model_to_response(e, e.origin_office, e.destination_office)
         for e in events
