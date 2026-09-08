@@ -1,6 +1,8 @@
+from __future__ import annotations
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime
 
 from src.domain.models.Event import Event, EventStatus
 from src.domain.models.CentralOffice import CentralOffice
@@ -22,12 +24,12 @@ class EventRepository:
             .options(
                 selectinload(Event.origin_office),
                 selectinload(Event.destination_office),
+                selectinload(Event.reported_by),
                 selectinload(Event.photos),
             )
             .where(Event.id == event_id)
         )
         return result.scalar_one_or_none()
-
 
     async def list(
         self,
@@ -37,6 +39,7 @@ class EventRepository:
         query = select(Event).options(
             selectinload(Event.origin_office),
             selectinload(Event.destination_office),
+            selectinload(Event.reported_by),
             selectinload(Event.photos),
         )
         if status:
@@ -65,3 +68,12 @@ class EventRepository:
             ).where(CentralOffice.id == office_id)
         )
         return result.scalar_one()
+
+    async def list_resolved_before(self, cutoff: datetime) -> list[Event]:
+        result = await self._session.execute(
+            select(Event).where(
+                Event.status == EventStatus.RESOLVED,
+                Event.updated_at < cutoff,
+            )
+        )
+        return list(result.scalars().all())

@@ -2,10 +2,12 @@ from src.domain.schemas.Event import EventCreateSchema
 from src.application.dtos.responses.event_response import (
     EventResponse,
     CentralOfficeSummaryResponse,
+    ReportedByResponse,
 )
 from src.application.mappers.event_photo_mapper import EventPhotoMapper
 from src.domain.models.Event import Event, EventType, EventStatus
 from src.domain.models.CentralOffice import CentralOffice
+from src.domain.models.User import User
 from src.services.geo import point_from_coords, coords_from_point
 
 
@@ -29,7 +31,10 @@ class EventMapper:
 
     @staticmethod
     def model_to_response(
-        model: Event, origin_office: CentralOffice, destination_office: CentralOffice
+        model: Event,
+        origin_office: CentralOffice,
+        destination_office: CentralOffice,
+        reported_by: User,
     ) -> EventResponse:
         latitude, longitude = coords_from_point(model.location)
         return EventResponse(
@@ -56,7 +61,11 @@ class EventMapper:
             field_reference=model.field_reference,
             description=model.description,
             status=model.status,
-            reported_by_id=model.reported_by_id,
+            reported_by=ReportedByResponse(
+                id=reported_by.id,
+                technician_code=reported_by.technician_code,
+                full_name=reported_by.full_name,
+            ),
             reported_at=model.reported_at,
             photos=[EventPhotoMapper.model_to_response(p) for p in (model.photos or [])],
         )
