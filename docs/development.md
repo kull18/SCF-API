@@ -4,7 +4,7 @@
 
 - Python 3.12+
 - PostgreSQL con PostGIS (o Docker, ver `deployment.md`)
-- Cuentas de AWS, Meta for Developers y OneSignal si se trabaja en features que dependan de esos servicios
+- Cuentas de AWS, Meta for Developers, Twilio (opcional, proveedor alternativo de WhatsApp) y OneSignal si se trabaja en features que dependan de esos servicios
 
 ## Setup local
 
@@ -20,6 +20,25 @@ python .\main.py
 
 API disponible en `http://localhost:8000/docs`.
 
+### Primer arranque: crear el usuario administrador
+
+`POST /users/bulk` requiere rol `ADMIN`, y no hay forma de crear uno sin ya serlo — por eso el primer admin se crea con un script standalone, no vía API:
+
+```bash
+python seed_admin.py
+```
+
+También existe `seed_technician.py`, útil para generar cuentas de técnico de prueba (por ejemplo, para credenciales de revisión de Google Play/App Store) sin pasar por el flujo real de WhatsApp.
+
+### Cambios de esquema durante desarrollo
+
+Como `create_all` no altera columnas de tablas existentes (ver `database.md`), agregar o modificar un campo en un modelo requiere recrear esa tabla manualmente mientras no exista Alembic:
+
+```bash
+docker compose exec db psql -U postgres -d scf -c "DROP TABLE IF EXISTS <tabla> CASCADE;"
+```
+
+El `CASCADE` elimina foreign keys que otras tablas tengan hacia la que se borra (esas tablas no se pierden, solo la constraint) — al reiniciar el servidor, `init_db()` recrea todo con el esquema actual.
 
 ## Convención de ramas
 
@@ -35,19 +54,3 @@ API disponible en `http://localhost:8000/docs`.
 Una rama por feature/fix. El README/docs se actualiza en la misma rama donde vive el cambio que documenta.
 
 ## Convención de commits
-
-```
-tipo(alcance opcional): descripción corta en imperativo
-```
-
-Ejemplos: `feat(events): add distance calculation on event creation`, `fix(auth): correct bcrypt 72-byte truncation`, `refactor(usecases): replace ValueError with typed exceptions`.
-
-## Dónde va cada cosa (ver `architecture.md` para el detalle completo)
-
-- Regla de negocio nueva → `application/usecases/`
-- Excepción de negocio nueva → hereda de `AppError` en `core/exceptions.py`, con su handler en `core/exception_handlers.py`
-- Campo nuevo que el cliente envía → `domain/schemas/`
-- Campo nuevo que el cliente recibe → `application/dtos/responses/`
-- Conversión entre ambos → `application/mappers/`
-- Query nueva a la base de datos → `infrastructure/repositories/` (sin validaciones de negocio ahí)
-- Utilidad técnica sin estado de negocio (ej. un nuevo proveedor de SMS) → `services/`

@@ -12,28 +12,35 @@ docker compose up --build
 
 `docker-compose.yml` levanta la API junto con `postgis/postgis:16-3.4` (Postgres con PostGIS preinstalado), evitando configurar la extensión manualmente en el host.
 
+## Despliegue en producción (sin clonar el repositorio en el servidor)
+
+El servidor de producción no clona el código fuente — construye la imagen localmente (o en CI) y la distribuye vía Docker Hub, manteniendo el servidor libre de credenciales de Git y del código fuente.
+
+**En la máquina local:**
+```bash
+docker build -t <usuario>/scf-api:latest .
+docker push <usuario>/scf-api:latest
+```
+
+**En el servidor**, con un `docker-compose.prod.yml` que referencia la imagen ya construida (`image: <usuario>/scf-api:latest`, sin `build: .`) más el servicio de `db`, y un `.env` propio de producción (contraseñas y `SECRET_KEY` distintos a los de desarrollo):
+```bash
+docker compose -f docker-compose.prod.yml pull api
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Para actualizar tras un cambio de código: repetir el build/push local, y en el servidor `pull` + `up -d` sobre el mismo `docker-compose.prod.yml` — el volumen de Postgres persiste sin interrupción, solo se reemplaza el contenedor `api`.
+
+### Reverse proxy y HTTPS
+
+El puerto de la API se expone solo en `127.0.0.1` dentro del servidor (`"127.0.0.1:8000:8000"` en el compose), nunca directo a internet. Nginx corre nativo en el host como reverse proxy hacia ese puerto, y Certbot (Let's Encrypt) gestiona el certificado HTTPS con renovación automática.
+
+### Memoria y PostGIS
+
+Cargar la extensión PostGIS por primera vez es una operación intensiva en memoria — en instancias con poca RAM (por debajo de 2GB) puede activar el OOM Killer del kernel y tumbar el proceso de Postgres a medio arrancar. Si esto ocurre, agregar swap desbloquea el arranque de forma inmediata, pero no sustituye tener RAM física suficiente para operación real con carga de usuarios:
+```bash
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+```
 
 ## AWS S3 — evidencia fotográfica
 
-Bucket privado (`Block all public access` activado), cifrado SSE-S3, versionado activo, `Bucket owner enforced`. Acceso vía IAM user dedicado con política de mínimo privilegio (`PutObject`, `GetObject`, `DeleteObject` restringido a `arn:aws:s3:::<bucket>/*`).
-
-Las fotos (evidencia de eventos y perfiles de usuario) se suben directo del cliente a S3 mediante URLs prefirmadas — el backend nunca recibe el binario. El nombre del objeto es el **hash SHA-256 del contenido**, calculado en el cliente:
-
-```
-events/{event_id}/{sha256_hash}.{ext}
-profiles/{user_id}/{sha256_hash}.{ext}
-```
-
-Esto da deduplicación automática (dentro del mismo evento/usuario) y verificación de integridad, similar al patrón de content-addressable storage usado por plataformas de mensajería.
-
-## WhatsApp Business API
-
-Requiere: cuenta de Meta Business, número verificado, y un **message template** aprobado por Meta (categoría *Utility*) para poder iniciar conversaciones no solicitadas por el usuario (necesario para el envío de credenciales en el alta masiva).
-
-## OneSignal
-
-Notificaciones push asociadas por `technician_code` como `external_id` (vía `OneSignal.login()` en el cliente Flutter), no por `player_id` directo — simplifica el envío desde el backend sin tener que rastrear tokens de dispositivo por su cuenta.
-
-## Infraestructura recomendada
-
-Dado el volumen esperado (~50 usuarios) y que el proyecto ya usa AWS para S3/IAM: **AWS Lightsail**, corriendo la imagen Docker vía Lightsail Containers o una instancia estándar con `docker compose`. Se descartó AWS ECS/Fargate por ser sobre-ingeniería para esta escala.
+Bucket privado (`Block all public access` activado), cifrado
