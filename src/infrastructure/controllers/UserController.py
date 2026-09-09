@@ -55,7 +55,7 @@ async def list_users(
 async def get_profile_photo_upload_url(
     filename: str,
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     object_key = build_profile_photo_key(current_user.id, filename)
     upload_url = generate_upload_presigned_url(object_key)
@@ -67,7 +67,7 @@ async def complete_profile(
     schema: CompleteProfileSchema,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = UserRepository(session)
     use_case = CompleteProfileUseCase(repository)

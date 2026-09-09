@@ -26,9 +26,8 @@ class LocationMethod(str, enum.Enum):
 
 class EventStatus(str, enum.Enum):
     ACTIVE = "ACTIVE"
-    PENDING = "PENDING"
     RESOLVED = "RESOLVED"
-
+    CLOSED = "CLOSED"
 
 class Event(Base):
     """Sections 13 and 14 of the design document."""
@@ -93,7 +92,7 @@ class Event(Base):
         back_populates="events_as_destination",
         foreign_keys=[destination_office_id],
     )
-    reported_by = relationship("User", back_populates="events")
+    reported_by = relationship("User", foreign_keys=[reported_by_id])
     photos = relationship(
         "EventPhoto", back_populates="event", cascade="all, delete-orphan"
     )

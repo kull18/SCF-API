@@ -6,7 +6,8 @@ from pydantic import BaseModel
 class EventCommentAuthorResponse(BaseModel):
     id: int
     technician_code: str
-    full_name: str
+    full_name: str | None
+    profile_photo_url: str | None
 
 
 class EventCommentResponse(BaseModel):

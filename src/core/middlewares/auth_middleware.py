@@ -10,6 +10,8 @@ from src.infrastructure.repositories.RevokedTokenRepository import RevokedTokenR
 PUBLIC_PATHS = {
     "/auth/login",
     "/health",
+    "/auth/device-login",
+    "/auth/forgot-password",
     "/docs",
     "/openapi.json",
     "/redoc",

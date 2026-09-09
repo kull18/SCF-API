@@ -10,6 +10,7 @@ from src.infrastructure.repositories.NotificationRepository import NotificationR
 from src.infrastructure.repositories.UserRepository import UserRepository
 from src.application.usecases.CreateEventUseCase import CreateEventUseCase
 from src.application.usecases.ListEventsUseCase import ListEventsUseCase
+from src.application.usecases.GetEventUseCase import GetEventUseCase
 from src.application.usecases.UpdateEventUseCase import UpdateEventUseCase
 from src.application.usecases.NotifyEventCreatedUseCase import NotifyEventCreatedUseCase
 from src.domain.schemas.Event import EventCreateSchema, EventUpdateSchema
@@ -25,7 +26,7 @@ async def create_event(
     schema: EventCreateSchema,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     event_repository = EventRepository(session)
     notification_repository = NotificationRepository(session)
@@ -37,20 +38,50 @@ async def create_event(
     model = EventMapper.schema_to_model(schema, reported_by_id=current_user.id)
     created = await use_case.execute(model)
 
-    return EventMapper.model_to_response(created)
+    full_event = await event_repository.get_by_id(created.id)
+    return EventMapper.model_to_response(
+        full_event,
+        full_event.origin_office,
+        full_event.destination_office,
+        full_event.reported_by,
+    )
 
 
 @router.get("", response_model=list[EventResponse])
 async def list_events(
     status: EventStatus | None = Query(default=None),
+    reported_by: str | None = Query(default=None),
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = EventRepository(session)
     use_case = ListEventsUseCase(repository)
-    events = await use_case.execute(status=status)
-    return [EventMapper.model_to_response(e) for e in events]
+
+    reported_by_id = current_user.id if reported_by == "me" else None
+    events = await use_case.execute(status=status, reported_by_id=reported_by_id)
+
+    return [
+        EventMapper.model_to_response(e, e.origin_office, e.destination_office, e.reported_by)
+        for e in events
+    ]
+
+
+@router.get("/{event_id}", response_model=EventResponse)
+async def get_event(
+    event_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
+):
+    repository = EventRepository(session)
+    use_case = GetEventUseCase(repository)
+
+    event = await use_case.execute(event_id)
+
+    return EventMapper.model_to_response(
+        event, event.origin_office, event.destination_office, event.reported_by
+    )
 
 
 @router.patch("/{event_id}", response_model=EventResponse)
@@ -59,9 +90,16 @@ async def update_event(
     schema: EventUpdateSchema,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = EventRepository(session)
     use_case = UpdateEventUseCase(repository)
-    updated = await use_case.execute(event_id, schema)
-    return EventMapper.model_to_response(updated)
+    updated = await use_case.execute(event_id, schema, requesting_user_id=current_user.id)
+
+    full_event = await repository.get_by_id(updated.id)
+    return EventMapper.model_to_response(
+        full_event,
+        full_event.origin_office,
+        full_event.destination_office,
+        full_event.reported_by,
+    )

@@ -10,13 +10,20 @@ class CentralOfficeSummaryResponse(BaseModel):
     id: int
     prefix: str
     name: str
+    city: str
+
+
+class ReportedByResponse(BaseModel):
+    id: int
+    technician_code: str
+    full_name: str | None
 
 
 class EventResponse(BaseModel):
     id: int
     type: EventType
-    origin_office_id: int
-    destination_office_id: int
+    origin_office: CentralOfficeSummaryResponse
+    destination_office: CentralOfficeSummaryResponse
     latitude: float
     longitude: float
     location_method: LocationMethod
@@ -26,6 +33,6 @@ class EventResponse(BaseModel):
     field_reference: str | None
     description: str
     status: EventStatus
-    reported_by_id: int
+    reported_by: ReportedByResponse
     reported_at: datetime
     photos: list[EventPhotoResponse] = []
