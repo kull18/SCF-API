@@ -13,6 +13,12 @@ class CentralOfficeSummaryResponse(BaseModel):
     city: str
 
 
+class ReportedByResponse(BaseModel):
+    id: int
+    technician_code: str
+    full_name: str | None
+
+
 class EventResponse(BaseModel):
     id: int
     type: EventType
@@ -27,6 +33,6 @@ class EventResponse(BaseModel):
     field_reference: str | None
     description: str
     status: EventStatus
-    reported_by_id: int
+    reported_by: ReportedByResponse
     reported_at: datetime
     photos: list[EventPhotoResponse] = []

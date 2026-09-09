@@ -4,6 +4,7 @@ from src.application.dtos.responses.event_comment_response import (
     EventCommentAuthorResponse,
 )
 from src.domain.models.EventComment import EventComment
+from src.services.s3_service import generate_download_presigned_url
 
 
 class EventCommentMapper:
@@ -25,6 +26,11 @@ class EventCommentMapper:
                 id=model.user.id,
                 technician_code=model.user.technician_code,
                 full_name=model.user.full_name,
+                profile_photo_url=(
+                    generate_download_presigned_url(model.user.profile_photo_key)
+                    if model.user.profile_photo_key
+                    else None
+                ),
             ),
             created_at=model.created_at,
         )

@@ -19,6 +19,8 @@ from src.core.middlewares.body_size_middleware import BodySizeLimitMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from src.core.scheduler import start_scheduler, stop_scheduler
+import logging
 
 from src.core.middlewares.rate_limiter import limiter
 from src.core.exception_handlers import (
@@ -30,10 +32,14 @@ from src.core.exception_handlers import (
 )
 from src.core.middlewares.error_handling_middleware import ErrorHandlingMiddleware
 
+logging.basicConfig(level=logging.INFO)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    start_scheduler()
     yield
+    stop_scheduler()
 
 app = FastAPI(title="SCF API", version="1.0.0", lifespan=lifespan)
 app.add_middleware(

@@ -10,13 +10,13 @@ from src.infrastructure.repositories.NotificationRepository import NotificationR
 from src.infrastructure.repositories.UserRepository import UserRepository
 from src.application.usecases.CreateEventUseCase import CreateEventUseCase
 from src.application.usecases.ListEventsUseCase import ListEventsUseCase
+from src.application.usecases.GetEventUseCase import GetEventUseCase
 from src.application.usecases.UpdateEventUseCase import UpdateEventUseCase
 from src.application.usecases.NotifyEventCreatedUseCase import NotifyEventCreatedUseCase
 from src.domain.schemas.Event import EventCreateSchema, EventUpdateSchema
 from src.domain.models.Event import EventStatus
 from src.application.dtos.responses.event_response import EventResponse
 from src.application.mappers.event_mapper import EventMapper
-from src.application.usecases.GetEventUseCase import GetEventUseCase
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -38,22 +38,22 @@ async def create_event(
     model = EventMapper.schema_to_model(schema, reported_by_id=current_user.id)
     created = await use_case.execute(model)
 
-    # Tras crear, recargamos con las relaciones para poder mapear la respuesta
     full_event = await event_repository.get_by_id(created.id)
     return EventMapper.model_to_response(
-        full_event, full_event.origin_office, full_event.destination_office
+        full_event,
+        full_event.origin_office,
+        full_event.destination_office,
+        full_event.reported_by,
     )
 
 
 @router.get("", response_model=list[EventResponse])
 async def list_events(
     status: EventStatus | None = Query(default=None),
-    reported_by: str | None = Query(
-        default=None, description="Usa 'me' para filtrar solo eventos propios"
-    ),
+    reported_by: str | None = Query(default=None),
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = EventRepository(session)
     use_case = ListEventsUseCase(repository)
@@ -62,27 +62,9 @@ async def list_events(
     events = await use_case.execute(status=status, reported_by_id=reported_by_id)
 
     return [
-        EventMapper.model_to_response(e, e.origin_office, e.destination_office)
+        EventMapper.model_to_response(e, e.origin_office, e.destination_office, e.reported_by)
         for e in events
     ]
-
-
-@router.patch("/{event_id}", response_model=EventResponse)
-async def update_event(
-    event_id: int,
-    schema: EventUpdateSchema,
-    session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
-):
-    repository = EventRepository(session)
-    use_case = UpdateEventUseCase(repository)
-    updated = await use_case.execute(event_id, schema)
-
-    full_event = await repository.get_by_id(updated.id)
-    return EventMapper.model_to_response(
-        full_event, full_event.origin_office, full_event.destination_office
-    )
 
 
 @router.get("/{event_id}", response_model=EventResponse)
@@ -97,4 +79,27 @@ async def get_event(
 
     event = await use_case.execute(event_id)
 
-    return EventMapper.model_to_response(event, event.origin_office, event.destination_office)
+    return EventMapper.model_to_response(
+        event, event.origin_office, event.destination_office, event.reported_by
+    )
+
+
+@router.patch("/{event_id}", response_model=EventResponse)
+async def update_event(
+    event_id: int,
+    schema: EventUpdateSchema,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
+):
+    repository = EventRepository(session)
+    use_case = UpdateEventUseCase(repository)
+    updated = await use_case.execute(event_id, schema, requesting_user_id=current_user.id)
+
+    full_event = await repository.get_by_id(updated.id)
+    return EventMapper.model_to_response(
+        full_event,
+        full_event.origin_office,
+        full_event.destination_office,
+        full_event.reported_by,
+    )

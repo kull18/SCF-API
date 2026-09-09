@@ -22,7 +22,7 @@ async def create_event_comment(
     schema: EventCommentCreateSchema,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     comment_repository = EventCommentRepository(session)
     event_repository = EventRepository(session)
@@ -39,7 +39,7 @@ async def list_event_comments(
     event_id: int,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = EventCommentRepository(session)
     use_case = ListEventCommentsUseCase(repository)
@@ -52,7 +52,7 @@ async def delete_event_comment(
     comment_id: int,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
-    _: str = Depends(require_role(UserRole.TECNICO)),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
 ):
     repository = EventCommentRepository(session)
     use_case = DeleteEventCommentUseCase(repository)

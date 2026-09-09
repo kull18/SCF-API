@@ -53,10 +53,13 @@ def build_content_addressed_key(prefix: str, entity_id: int, content_hash: str, 
 
 def object_exists(object_key: str) -> bool:
     try:
-        _s3_client.head_object(Bucket=settings.s3_bucket_name, Key=object_key)
+        _s3_client.head_object(Bucket=settings.S3_BUCKET_NAME, Key=object_key)
         return True
     except ClientError as e:
         error_code = e.response.get("Error", {}).get("Code", "")
-        if error_code in ("404", "NoSuchKey"):
+        # Con Bucket owner enforced y sin permiso s3:ListBucket, S3 responde
+        # 403 (no 404) cuando el objeto no existe -- ambos casos significan
+        # "no existe", no un error real de permisos.
+        if error_code in ("404", "NoSuchKey", "403", "Forbidden"):
             return False
         raise
