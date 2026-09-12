@@ -17,6 +17,9 @@ from src.application.dtos.responses.user_response import (
 from src.application.mappers.user_mapper import UserMapper
 from src.services.s3_service import build_profile_photo_key, generate_upload_presigned_url
 from src.services.credential_sender_factory import get_credential_sender_context
+from src.domain.schemas.User import AnonymizeUserSchema
+from src.application.usecases.AnonymizeUserUseCase import AnonymizeUserUseCase
+from src.infrastructure.repositories.DeviceTokenRepository import DeviceTokenRepository
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -79,3 +82,31 @@ async def complete_profile(
         schema.profile_photo_key,
     )
     return UserMapper.model_to_response(updated)
+
+
+@router.delete("/me", status_code=204)
+async def delete_my_account(
+    schema: AnonymizeUserSchema,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO)),
+):
+    user_repository = UserRepository(session)
+    device_token_repository = DeviceTokenRepository(session)
+    use_case = AnonymizeUserUseCase(user_repository, device_token_repository)
+
+    await use_case.execute(current_user.id, schema.confirm)
+
+@router.delete("/{user_id}", status_code=204)
+async def admin_delete_user_account(
+    user_id: int,
+    schema: AnonymizeUserSchema,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.ADMIN)),
+):
+    user_repository = UserRepository(session)
+    device_token_repository = DeviceTokenRepository(session)
+    use_case = AnonymizeUserUseCase(user_repository, device_token_repository)
+
+    await use_case.execute(user_id, schema.confirm)
