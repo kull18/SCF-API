@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from sqlalchemy import update
 from src.domain.models.DeviceToken import DeviceToken
 
 
@@ -30,3 +30,9 @@ class DeviceTokenRepository:
         if device_token is not None:
             device_token.is_active = False
             await self._session.commit()
+
+    async def revoke_all_for_user(self, user_id: int) -> None:
+      await self._session.execute(
+        update(DeviceToken).where(DeviceToken.user_id == user_id).values(is_active=False)
+      )
+      await self._session.commit()

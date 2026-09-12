@@ -30,3 +30,6 @@ class UserUpdateSchema(BaseModel):
     phone: str | None = None
     email: str | None = None
     is_active: bool | None = None
+
+class AnonymizeUserSchema(BaseModel):
+    confirm: bool = Field(description="Debe ser true para confirmar la eliminacion")
