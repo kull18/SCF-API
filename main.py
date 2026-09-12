@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
     yield
     stop_scheduler()
 
-app = FastAPI(title="SCF API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="SCF API", version="2.0.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -75,7 +75,7 @@ app.include_router(EventPhotoController.router)
 def health():
     return {
         "status": "ok",
-        "version": "1.0.0"
+        "version": "2.0.0"
     }
 
 if __name__ == "__main__":

@@ -2,4 +2,4 @@
 __pycache__
 .env
 .vscode
-seed_central_offices.py
+seed_*.py
