@@ -23,7 +23,7 @@ jobs:
           pip install -r requirements-dev.txt --break-system-packages
 
       - name: Run tests
-        run: pytest -v
+        run: python -m pytest -v
 
   build-and-deploy:
     needs: test
