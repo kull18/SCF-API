@@ -1,3 +1,7 @@
+from httpx import delete
+from datetime import timedelta
+from datetime import timezone
+from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update
@@ -36,3 +40,14 @@ class DeviceTokenRepository:
         update(DeviceToken).where(DeviceToken.user_id == user_id).values(is_active=False)
       )
       await self._session.commit()
+
+    async def purge_expired_or_revoked(self) -> int:
+        cutoff_revoked = datetime.now(timezone.utc) - timedelta(days=30)
+        result = await self._session.execute(
+            delete(DeviceToken).where(
+                (DeviceToken.expires_at < datetime.now(timezone.utc))
+                | ((DeviceToken.is_active == False) & (DeviceToken.created_at < cutoff_revoked))
+            )
+        )
+        await self._session.commit()
+        return result.rowcount 
