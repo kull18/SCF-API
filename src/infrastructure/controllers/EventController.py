@@ -12,6 +12,7 @@ from src.application.usecases.CreateEventUseCase import CreateEventUseCase
 from src.application.usecases.ListEventsUseCase import ListEventsUseCase
 from src.application.usecases.GetEventUseCase import GetEventUseCase
 from src.application.usecases.UpdateEventUseCase import UpdateEventUseCase
+from src.application.usecases.DeleteEventUseCase import DeleteEventUseCase
 from src.application.usecases.NotifyEventCreatedUseCase import NotifyEventCreatedUseCase
 from src.domain.schemas.Event import EventCreateSchema, EventUpdateSchema
 from src.domain.models.Event import EventStatus
@@ -84,6 +85,7 @@ async def get_event(
     )
 
 
+@router.put("/{event_id}", response_model=EventResponse)
 @router.patch("/{event_id}", response_model=EventResponse)
 async def update_event(
     event_id: int,
@@ -103,3 +105,15 @@ async def update_event(
         full_event.destination_office,
         full_event.reported_by,
     )
+
+
+@router.delete("/{event_id}", status_code=204)
+async def delete_event(
+    event_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.TECNICO, UserRole.ADMIN)),
+):
+    repository = EventRepository(session)
+    use_case = DeleteEventUseCase(repository)
+    await use_case.execute(event_id, requesting_user_id=current_user.id)
