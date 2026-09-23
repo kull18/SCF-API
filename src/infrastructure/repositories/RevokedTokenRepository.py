@@ -21,10 +21,11 @@ class RevokedTokenRepository:
         )
         return result.scalar_one_or_none() is not None
 
-    async def purge_expired(self) -> None:
+    async def purge_expired(self) -> int:
         """Limpieza opcional de tokens ya vencidos, se puede correr periodicamente."""
         from sqlalchemy import delete
-        await self._session.execute(
+        result = await self._session.execute(
             delete(RevokedToken).where(RevokedToken.expires_at < datetime.now(timezone.utc))
         )
         await self._session.commit()
+        return result.rowcount
