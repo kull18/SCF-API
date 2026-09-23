@@ -1,3 +1,6 @@
+from src.application.usecases.PurgeExpiredTokensUseCase import PurgeExpiredTokensUseCase
+from src.core.middlewares.role_middleware import require_role
+from src.domain.models import UserRole
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -140,3 +143,15 @@ async def forgot_password(
     return {
         "detail": "Si el código es válido, se enviaron nuevas credenciales por WhatsApp."
     }
+
+@router.post("/tokens/purge-now", status_code=200)
+async def purge_tokens_now(
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    _: str = Depends(require_role(UserRole.ADMIN)),
+):
+    revoked_token_repository = RevokedTokenRepository(session)
+    device_token_repository = DeviceTokenRepository(session)
+    use_case = PurgeExpiredTokensUseCase(revoked_token_repository, device_token_repository)
+
+    return await use_case.execute()
