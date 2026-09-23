@@ -77,3 +77,9 @@ class EventRepository:
             )
         )
         return list(result.scalars().all())
+
+    async def delete(self, event_id: int) -> None:
+        event = await self._session.get(Event, event_id)
+        if event is not None:
+            await self._session.delete(event)
+            await self._session.commit()
